@@ -1,0 +1,32 @@
+version: '3'
+# services
+services:
+    # mysql
+    mysql:
+        image: mysql:8.0.30
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+        command: --innodb-use-native-aio=0
+    
+    # proxy
+    proxy:
+        image: jwilder/nginx-proxy:0.9.0
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        ports:
+            - "80:80"
+    
+    # www
+    www:
+        image: atsu666/acms:8.1 # phpのバージョンにあったものを指定
+        privileged: true
+        volumes:
+            - ./www:/var/www/html # host, guest間のファイル同期
+            - /etc/localtime:/etc/localtime:ro
+        links:
+            - mysql:mysql
+        environment:
+            - VIRTUAL_HOST=acms.lab,www.acms.lab # host名を指定
+            - APACHE_DOCUMENT_ROOT=/var/www/html # ドキュメントルートを指定
